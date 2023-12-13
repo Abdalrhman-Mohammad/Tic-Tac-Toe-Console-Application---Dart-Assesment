@@ -1,14 +1,16 @@
 import "dart:io";
 
-int NumberOfFillCells = 0;
+int NumberOfFillCells = 0; //Number Of Cells that used
+
 List<List<String>> Area = [
   ['1', '2', '3'],
   ['4', '5', '6'],
   ['7', '8', '9']
-];
+]; //The area player playing on
 void main() {
-  Turn turn = Turn.FirstPlayer;
-  String signs = "XO";
+  Turn turn = Turn.FirstPlayer; //turn of player playing now
+  String signs =
+      "XO"; //Signs that players used while playing sorted as the users
   while (true) {
     for (int i = 0; i < Area.length; i++) {
       for (int j = 0; j < Area[i].length; j++) {
@@ -17,33 +19,42 @@ void main() {
       }
       print("");
       if (i < 2) print("---+---+---");
-    }
+    } //Printing the area
+    //Check if the result of the game is draw
     if (CheckDrawing(
         turn == Turn.FirstPlayer ? Turn.SecondPlayer : Turn.FirstPlayer)) {
       break;
     }
+    //Check if one of the players won
     if (CheckWinning(
         turn == Turn.FirstPlayer ? Turn.SecondPlayer : Turn.FirstPlayer)) {
       break;
     }
-    String message;
+
+    String
+        message; //Contain the meesage will appear for user to determine the turn for who and give the option for players to end the game
+    //These conditions check who player is playing now to determine the sutable message that will appear
     if (turn == Turn.FirstPlayer)
       message =
-          "Player 1,please enter the number of the square where want to place your X: (Or 'X' to end the game)";
+          "Player 1,please enter the number of the square where want to place your X:";
     else
       message =
-          "Player 2,please enter the number of the square where want to place your O: (Or 'X' to end the game)";
-    print(message);
-    String option = stdin.readLineSync()!;
+          "Player 2,please enter the number of the square where want to place your O:";
+    message = message + " (Or 'X' to end the game)";
+    print(message); //
+    String option = stdin
+        .readLineSync()!; // The option that player will choose (choose a square or end the game)
     if (option == 'X') {
       print("Game is ENDED!!");
       break;
     }
-    int num = int.parse(option);
+    int num = int.parse(
+        option); //Variable contain the number of square the player chose if didn't choose to end the game
     while (!ValidSign(num, turn)) {
       num = int.parse(stdin.readLineSync()!);
       print(message);
     }
+    //Give the other player the turn to play in the next move
     if (turn == Turn.FirstPlayer)
       turn = Turn.SecondPlayer;
     else
@@ -76,47 +87,64 @@ void printWInner(turn) {
       " Win!!!");
 }
 
-bool CheckWinning(Turn turn) {
-  bool end = false;
-  for (int i = 0; i < 3 && !end; i++) {
+bool checkingRows() {
+  //Rows checking
+  for (int i = 0; i < 3; i++) {
     if (Area[i][0] == Area[i][1] &&
         Area[i][0] == Area[i][2] &&
         Area[i][1] == Area[i][2]) {
-      end = true;
+      return true;
     }
   }
-  if (end) {
-    printWInner(turn);
-    return true;
-  }
-  for (int i = 0; i < 3 && !end; i++) {
+  return false;
+}
+
+bool checkingColumns() {
+  //Columns checking
+  for (int i = 0; i < 3; i++) {
     if (Area[0][i] == Area[1][i] &&
         Area[0][i] == Area[2][i] &&
         Area[1][i] == Area[2][i]) {
-      end = true;
+      return true;
     }
   }
-  if (end) {
-    printWInner(turn);
-    return true;
-  }
+  return false;
+}
+
+bool checkingMainDiagonal() {
+  //Main Diagonal checking
   if (Area[0][0] == Area[1][1] &&
       Area[1][1] == Area[2][2] &&
       Area[0][0] == Area[2][2]) {
-    end = true;
-  }
-  if (end) {
-    printWInner(turn);
     return true;
   }
+  return false;
+}
+
+bool checkSecondaryDiagonal() {
+  //Secondary Diagonal checking
   if (Area[0][2] == Area[1][1] &&
       Area[1][1] == Area[2][0] &&
       Area[0][2] == Area[2][0]) {
-    end = true;
-  }
-  if (end) {
-    printWInner(turn);
     return true;
+  }
+  return false;
+}
+
+bool CheckWinning(turn) {
+  List<Function> checks = [
+    checkingRows,
+    checkingColumns,
+    checkingMainDiagonal,
+    checkSecondaryDiagonal
+  ];
+  bool tmp;
+  for (Function f in checks) {
+    tmp = f();
+    if (tmp) {
+      printWInner(turn);
+      return true;
+    }
   }
   return false;
 }
@@ -125,3 +153,4 @@ enum Turn {
   FirstPlayer,
   SecondPlayer,
 }
+
