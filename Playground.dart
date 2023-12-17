@@ -1,84 +1,106 @@
 import "dart:io";
 
-int NumberOfFillCells = 0; //Number Of Cells that used
+int NumberOfFilledCells = 0; //Number Of Cells that used
+int N = 3;
+List<List<String>> Area = []; //The area players playing on
+Turn? turn; //turn of player who playing now
+String?
+    message; //Contain the message will appear for user , to determine the turn for who and give the option for players to end the game
+String signs = "XO"; //Signs that players use while playing sorted as the users
 
-List<List<String>> Area = [
-  ['1', '2', '3'],
-  ['4', '5', '6'],
-  ['7', '8', '9']
-]; //The area player playing on
 void main() {
-  Turn turn = Turn.FirstPlayer; //turn of player playing now
-  String signs =
-      "XO"; //Signs that players used while playing sorted as the users
+  turn = Turn.FirstPlayer;
+  creatingArea();
   while (true) {
-    for (int i = 0; i < Area.length; i++) {
-      for (int j = 0; j < Area[i].length; j++) {
-        stdout.write(" " + Area[i][j] + " ");
-        if (j < 2) stdout.write("|");
-      }
-      print("");
-      if (i < 2) print("---+---+---");
-    } //Printing the area
+    //Printint area
+    printArea();
     //Check if the result of the game is draw
-    if (CheckDrawing(
-        turn == Turn.FirstPlayer ? Turn.SecondPlayer : Turn.FirstPlayer)) {
-      break;
-    }
+    CheckDrawing(
+        turn == Turn.FirstPlayer ? Turn.SecondPlayer : Turn.FirstPlayer);
     //Check if one of the players won
-    if (CheckWinning(
-        turn == Turn.FirstPlayer ? Turn.SecondPlayer : Turn.FirstPlayer)) {
-      break;
-    }
-
-    String
-        message; //Contain the meesage will appear for user to determine the turn for who and give the option for players to end the game
-    //These conditions check who player is playing now to determine the sutable message that will appear
-    if (turn == Turn.FirstPlayer)
-      message =
-          "Player 1,please enter the number of the square where want to place your X:";
-    else
-      message =
-          "Player 2,please enter the number of the square where want to place your O:";
-    message = message + " (Or 'X' to end the game)";
-    print(message); //
-    String option = stdin
-        .readLineSync()!; // The option that player will choose (choose a square or end the game)
-    if (option == 'X') {
-      print("Game is ENDED!!");
-      break;
-    }
-    int num = int.parse(
-        option); //Variable contain the number of square the player chose if didn't choose to end the game
-    while (!ValidSign(num, turn)) {
-      num = int.parse(stdin.readLineSync()!);
-      print(message);
-    }
+    CheckWinning(
+        turn == Turn.FirstPlayer ? Turn.SecondPlayer : Turn.FirstPlayer);
+    printingMessagesForMoves();
     //Give the other player the turn to play in the next move
-    if (turn == Turn.FirstPlayer)
-      turn = Turn.SecondPlayer;
-    else
-      turn = Turn.FirstPlayer;
+    changeTheTurn();
   }
 }
 
-bool ValidSign(int num, Turn turn) {
-  int r = ((num - 1) / 3).toInt();
-  int c = (num - 1) % 3;
+void creatingArea() {
+  for (int i = 0; i < N; i++) {
+    List<String> row = [];
+    for (int j = 1; j <= N; j++) {
+      int num = i * N + j;
+      row.add("$num");
+    }
+    Area.add(row);
+  }
+}
+
+void printArea() {
+  //Printing area
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      stdout.write(" " + Area[i][j] + " ");
+      if (j < N - 1) stdout.write("|");
+    }
+    print("");
+    if (i < N - 1) print("---+---+---");
+  }
+}
+
+void changeTheTurn() {
+  //If player one playing now , give the next move to player two and vise versa
+  if (turn == Turn.FirstPlayer)
+    turn = Turn.SecondPlayer;
+  else
+    turn = Turn.FirstPlayer;
+}
+
+void printingMessagesForMoves() {
+  //These conditions check who player is playing now to determine the suitable message that will appear
+  if (turn == Turn.FirstPlayer)
+    message = "Player 1";
+  else
+    message = "Player 2";
+  message = message! +
+      ",please enter the number of the square where want to place your ";
+  if (turn == Turn.FirstPlayer)
+    message = message! + "X:";
+  else
+    message = message! + "O:";
+  message = message! + " (Or 'X' to end the game)";
+  print(message);
+  // The option that player will choose (choose a square or end the game)
+  String option = stdin.readLineSync()!;
+  if (option == 'X') {
+    print("Game is ENDED!!");
+    exit(0);
+  }
+  //Variable contain the number for square the player chose if didn't choose to end the game
+  int num = int.parse(option);
+  while (!ValidSign(num, turn)) {
+    num = int.parse(stdin.readLineSync()!);
+    print(message);
+  }
+}
+
+bool ValidSign(int num, Turn? turn) {
+  int r = ((num - 1) / N).toInt();
+  int c = (num - 1) % N;
   if (Area[r][c] == "$num") {
-    NumberOfFillCells++;
+    NumberOfFilledCells++;
     Area[r][c] = turn == Turn.FirstPlayer ? 'X' : 'O';
     return true;
   } else
     return false;
 }
 
-bool CheckDrawing(Turn turn) {
-  if (NumberOfFillCells == 9) {
+void CheckDrawing(Turn turn) {
+  if (NumberOfFilledCells == N * N) {
     print("Game ended with draw result!!!");
-    return true;
+    exit(0);
   }
-  return false;
 }
 
 void printWInner(turn) {
@@ -89,49 +111,79 @@ void printWInner(turn) {
 
 bool checkingRows() {
   //Rows checking
-  for (int i = 0; i < 3; i++) {
-    if (Area[i][0] == Area[i][1] &&
-        Area[i][0] == Area[i][2] &&
-        Area[i][1] == Area[i][2]) {
-      return true;
+  bool find = false;
+  for (int i = 0; i < N; i++) {
+    find = true;
+    for (int j = 0; j < N; j++) {
+      for (int k = j + 1; k < N; k++) {
+        if (Area[i][j] != Area[i][k]) {
+          find = false;
+          break;
+        }
+      }
+      if (!find) {
+        break;
+      }
+    }
+    if (find) {
+      break;
     }
   }
-  return false;
+  return find;
 }
 
 bool checkingColumns() {
   //Columns checking
-  for (int i = 0; i < 3; i++) {
-    if (Area[0][i] == Area[1][i] &&
-        Area[0][i] == Area[2][i] &&
-        Area[1][i] == Area[2][i]) {
-      return true;
+  bool find = false;
+  for (int i = 0; i < N; i++) {
+    find = true;
+    for (int j = 0; j < N; j++) {
+      for (int k = j + 1; k < N; k++) {
+        if (Area[j][i] != Area[k][i]) {
+          find = false;
+          break;
+        }
+      }
+      if (!find) {
+        break;
+      }
+    }
+    if (find) {
+      break;
     }
   }
-  return false;
+  return find;
 }
 
 bool checkingMainDiagonal() {
   //Main Diagonal checking
-  if (Area[0][0] == Area[1][1] &&
-      Area[1][1] == Area[2][2] &&
-      Area[0][0] == Area[2][2]) {
-    return true;
+  bool ans = true;
+  for (int i = 0; i < N && ans; i++) {
+    for (int j = i + 1; j < N && ans; j++) {
+      if (Area[i][i] != Area[j][j]) {
+        ans = false;
+        break;
+      }
+    }
   }
-  return false;
+  return ans;
 }
 
 bool checkSecondaryDiagonal() {
   //Secondary Diagonal checking
-  if (Area[0][2] == Area[1][1] &&
-      Area[1][1] == Area[2][0] &&
-      Area[0][2] == Area[2][0]) {
-    return true;
+  bool ans = true;
+  for (int i = 0; i < N && ans; i++) {
+    for (int j = i + 1; j < N && ans; j++) {
+      if (Area[i][N - i - 1] != Area[j][N - j - 1]) {
+        ans = false;
+        break;
+      }
+    }
   }
-  return false;
+  return ans;
 }
 
-bool CheckWinning(turn) {
+void CheckWinning(turn) {
   List<Function> checks = [
     checkingRows,
     checkingColumns,
@@ -143,10 +195,9 @@ bool CheckWinning(turn) {
     tmp = f();
     if (tmp) {
       printWInner(turn);
-      return true;
+      exit(0);
     }
   }
-  return false;
 }
 
 enum Turn {
